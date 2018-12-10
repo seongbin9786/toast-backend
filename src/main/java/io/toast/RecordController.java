@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class RecordController {
 
 	@PostMapping
-	public void upload() {
-		
+	public String upload() {
+		return "1";//return new Record().getId().toString();
 	}
+	
 }
