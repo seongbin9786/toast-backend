@@ -1,13 +1,14 @@
 package io.toast;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,14 +20,26 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 @RequestMapping("/records")
 public class RecordController {
 
-	public static String DOWNLOAD_ROOT_PATH;
-
 	@Autowired
 	private RecordRepository repo;
+	
+	private FileUploadManager manager;
+	
+	@Autowired
+	public void setFileUploadManager(FileUploadManager manager) {
+		this.manager = manager;
+	}
+	
+	@GetMapping("/{id}")
+	public byte[] download(@PathVariable Long id) throws Exception {
+		Record r = repo.getOne(id);
 
-	@Value("${file.download_root_path}") 
-	public void setDownloadPath(String path) {
-		DOWNLOAD_ROOT_PATH = path;
+		return manager.getFileByRecord(r);
+	}
+	
+	@GetMapping
+	public List<Record> getAll() {
+		return repo.findAll();
 	}
 	
 	@PostMapping
@@ -34,21 +47,9 @@ public class RecordController {
 		
 		MultipartFile file = getFileFromRequest(request);
 		
-		String path = DOWNLOAD_ROOT_PATH + "/" + file.getName();
+		Record newRecord = manager.saveWithFile(file);
 		
-		saveToDrive(file, path);
-
-		return repo.save(new Record(path));
-	}
-	
-	private void saveToDrive(MultipartFile file, String path) {
-		try {
-			file.transferTo(new File(path));
-		} catch (IllegalStateException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		return repo.save(newRecord);
 	}
 
 	private MultipartFile getFileFromRequest(MultipartHttpServletRequest request) {
@@ -61,9 +62,7 @@ public class RecordController {
 			throw new NoFileUploadedException();
 		}
 		
-		MultipartFile file = request.getFile(key);
-		
-		return file;
+		return request.getFile(key);
 	}
 
 }
