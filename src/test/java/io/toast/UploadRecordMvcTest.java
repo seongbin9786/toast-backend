@@ -1,8 +1,10 @@
 package io.toast;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -14,7 +16,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -23,6 +27,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.After;
@@ -38,7 +43,6 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -62,20 +66,25 @@ public class UploadRecordMvcTest {
 
 	private static final String URL = "/records";
 	
-	private String DOWNLOAD_ROOT_PATH = "C:/spring_temporary_files/download/";
-	private String UPLOAD_ROOT_PATH = "C:/spring_temporary_files/upload/";
-
-	private String FILE_NAME = "filename.txt";
-	private String UPLOAD_PATH_AND_FILE_NAME = UPLOAD_ROOT_PATH + FILE_NAME;
-	private String DOWNLOAD_PATH_AND_FILE_NAME = DOWNLOAD_ROOT_PATH + FILE_NAME;
-	private Path UPLOAD_FILE_PATH = Paths.get(UPLOAD_PATH_AND_FILE_NAME);
-	private Path DOWNLOAD_FILE_PATH = Paths.get(DOWNLOAD_PATH_AND_FILE_NAME);
+	private String 서버_파일_디렉토리 = "C:/spring_temporary_files/download/";
+	private String 클라이언트_파일_디렉토리 = "C:/spring_temporary_files/upload/";
 	
+	private String[] 가능한_음성파일_확장자_배열 = { ".mp3", ".wav", ".m4a", ".flac", ".au" };
+
+	private String 파일명 = "filename";
+	private String 기본_확장자 = ".mp3";
+	private String 클라이언트에_저장된_음성파일_전체_디렉토리명 = 클라이언트_파일_디렉토리 + 파일명 + 기본_확장자;
+	private String 서버에_저장된_음성파일_전체_디렉토리명 = 서버_파일_디렉토리 + 파일명 + 기본_확장자;
+	private Path 클라이언트에_저장된_음성파일_전체_디렉토리_Path = Paths.get(클라이언트에_저장된_음성파일_전체_디렉토리명);
+	private Path 서버에_저장된_음성파일_전체_디렉토리_Path = Paths.get(서버에_저장된_음성파일_전체_디렉토리명);
+
+	public static final String AUDIO_PREFIX = "audio/";
+
 	@Before
 	@After
 	public void deleteFiles() throws Exception {
-		Files.deleteIfExists(UPLOAD_FILE_PATH);
-		Files.deleteIfExists(DOWNLOAD_FILE_PATH);	
+		Files.deleteIfExists(클라이언트에_저장된_음성파일_전체_디렉토리_Path);
+		Files.deleteIfExists(서버에_저장된_음성파일_전체_디렉토리_Path);	
 	}
 	
 	@After
@@ -104,22 +113,22 @@ public class UploadRecordMvcTest {
 
 	@Test
 	public void 학습테스트_임시_파일을_작성할_수_있다() throws Exception {
-		// given = ROOT_PATH 
 		
 		// when
-		writeFile("something new", true);
+		파일생성하기("something new", true);
 		
 		// then
-		Path p = Paths.get(UPLOAD_PATH_AND_FILE_NAME);
+		Path p = Paths.get(클라이언트에_저장된_음성파일_전체_디렉토리명);
 		assertTrue(Files.exists(p));
 	}
 
-	/**
-	 * 정해진 경로(PATH_AND_FILE_NAME) 상에 String 값으로 내용을 채워 파일을 생성한다.
-	 */
-	private void writeFile(String content, boolean toUpload) throws Exception {
+	private void 파일생성하기(String content, boolean toUpload) throws Exception {
+		파일생성하기(기본_확장자, content, toUpload);
+	}
+	
+	private void 파일생성하기(String suffix, String content, boolean toUpload) throws Exception {
 		final String charsetName = "utf-8";
-		final String path = toUpload ? UPLOAD_PATH_AND_FILE_NAME : DOWNLOAD_PATH_AND_FILE_NAME;
+		final String path = (toUpload ? 클라이언트_파일_디렉토리 : 서버_파일_디렉토리) + 파일명 + suffix;
 		
 		try (Writer writer = new BufferedWriter(
 				new OutputStreamWriter(new FileOutputStream(path), charsetName))) {
@@ -130,7 +139,7 @@ public class UploadRecordMvcTest {
 	@Test
 	public void 학습테스트_파일을_업로드할_수_있다() throws Exception {
 		// given = 파일
-		MockMultipartFile file = writeTempMockMultipart();
+		MockMultipartFile file = mockMultipart타입으로_Mp3파일_작성();
 
 		// when
 		mockMvc.perform(multipart(URL).file(file))
@@ -139,74 +148,115 @@ public class UploadRecordMvcTest {
 		.andExpect(status().isOk());
 	}
 
-	/**
-	 * 임시 파일 생성 후 MockMultipartFile로 변환하여 반환한다.
-	 * 
-	 * @return MockMultipartFile
-	 */
-	private MockMultipartFile writeTempMockMultipart() throws Exception {
-		writeFile("업로드 테스트", true);
+	private MockMultipartFile mockMultipart타입으로_Mp3파일_작성() throws Exception {
+		파일생성하기("업로드 테스트", true);
 		
-		// MockMvc에서는 file이 아니라 MockMultipartFile이어야 함. 그걸로 변환하는 작업이 아래.
-		File written = new File(UPLOAD_PATH_AND_FILE_NAME);
-		FileInputStream fis = new FileInputStream(written);
-		MockMultipartFile file = new MockMultipartFile(written.getName(), fis);
+		return getMultipartFile(기본_확장자);
+	}
+	
+	private MockMultipartFile mockMultipart타입으로_텍스트_파일_작성() throws Exception {
+		String txt확장자 = ".txt";
 		
-		return file;
+		파일생성하기(txt확장자, "업로드 테스트", true);
+		
+		return getMultipartFile(txt확장자);
+	}
+	
+	private MockMultipartFile mockMultipart타입으로_특정_확장자의_파일_작성(String ext) throws Exception {
+		파일생성하기(ext, "업로드 테스트", true);
+		
+		return getMultipartFile(ext);
+	}
+
+	private MockMultipartFile getMultipartFile(String ext) throws FileNotFoundException, IOException {
+		File 이미_생성된_파일 = new File(클라이언트_파일_디렉토리 + 파일명 + ext);
+		FileInputStream fis = new FileInputStream(이미_생성된_파일);
+
+		return new MockMultipartFile(이미_생성된_파일.getName(), fis);
 	}
 
 	@Test
-	public void 녹음_파일을_업로드하면_Record가_반환되어야_한다() throws Exception {
-		// given - 1 - 파일 새엇ㅇ
-		MockMultipartFile file = writeTempMockMultipart();
-		
-		// given - 2 - Repository를 mock함
-		when(repo.save(Mockito.any(Record.class))).thenReturn(new Record(1L));
-		
-		// given - 3 - Manager를 mock함
-		when(manager.saveWithFile(Mockito.any(MultipartFile.class))).thenReturn(new Record(1L));
-		
-		// when & then = 업로드 이후 파일이 업로드되었다고 정상 반응이 와야 함
-		String recordJson = mockMvc.perform(multipart(URL).file(file))
+	public void 업로드_가능한_녹음_파일의_종류는_아래와_같다() throws Exception {
 
-		// 1. OK
-		.andExpect(status().isOk())
-		.andReturn().getResponse().getContentAsString();
+		// 업로드 가능
+		for (String ext : 가능한_음성파일_확장자_배열) {
+			// given 
+			MockMultipartFile file = mockMultipart타입으로_특정_확장자의_파일_작성(ext);
+			
+			// when
+			mockMvc.perform(multipart(URL).file(file))
+			
+			// then
+			.andExpect(status().isOk());
+		}
 
-		// 2. JSON은 empty이면 안 됨
-		assertNotEquals("", recordJson);
+		// 업로드 불가능 - 그 외
+		// given 
+		MockMultipartFile file = mockMultipart타입으로_텍스트_파일_작성();
 		
-		// 3. Record 타입이어야 함
-		Record created = mapper.readValue(recordJson, Record.class);
-		assertTrue(created instanceof Record);
+		// when
+		String errorMsg = mockMvc.perform(multipart(URL).file(file))
+		
+		// then - 1 - BAD REQUEST 반환
+		.andExpect(status().isBadRequest())
+		.andReturn().getResponse().getErrorMessage();
+		
+		assertThat(errorMsg, is(BadFileUploadedException.MSG));
 
-		// 4. ID가 부여되어야 함
-		assertNotNull(created.getId());
+	}
+	
+	@Test
+	public void 학습테스트_파일_이름으로_음성_파일인지_판단한다() throws Exception {
+		for (String ext : 가능한_음성파일_확장자_배열) {
+			assertTrue(getContentType(ext).startsWith(AUDIO_PREFIX));
+		}
 	}
 
+	private String getContentType(String ext) throws IOException {
+		return Files.probeContentType(Paths.get("a" + ext));
+	}
+	
 	@Test
 	public void 개별_조회시_FileUploadManager_getFileByRecord를_호출한다() throws Exception {
 		// given - repo를 mock함
-		when(repo.getOne(Mockito.anyLong())).thenReturn(new Record(1L));
+		when(repo.findById(Mockito.anyLong())).thenReturn(Optional.of(new Record(1L)));
 
 		// when - 개별 조회 시
-		mockMvc.perform(get(URL + "/" + 1));
+		mockMvc.perform(get(URL + "/" + 1)).andExpect(status().isOk());
 		
 		// then - manager#getFileByRecord 1회 호출
 		verify(manager, times(1)).getFileByRecord(Mockito.any(Record.class));
 	}
 	
 	@Test
+	public void 예외테스트_없는_ID로_조회시_NOT_FOUND를_반환해야_한다() throws Exception {
+		// given - repo를 mock함
+		when(repo.getOne(Mockito.anyLong())).thenReturn(null);
+
+		// when - 없는 ID로 조회 시
+		Long 없는_ID = 999999L;
+		String errMsg = mockMvc.perform(get(URL + "/" + 없는_ID))
+		
+		// then - 1 - 404 NOT FOUND
+		.andExpect(status().isNotFound())
+		.andReturn().getResponse().getErrorMessage();
+
+		// then - 2 - 적절한 ErrorMsg 반환
+		assertThat(errMsg, is(NoRecordException.NO_RECORD_MSG));
+		
+	}
+	
+	@Test
 	public void FileUploadManager_getFileByRecord는_업로드된_파일의_byte_array를_제공해야_한다() throws Exception {
 		// given - 1 - 업로드된 폴더에 파일 생성
-		writeFile("다운로드 테스트", false);
+		파일생성하기("다운로드 테스트", false);
 		
 		// given - 2 - Manager 생성
 		FileUploadManager manager = new FileUploadManager();
-		manager.setDownloadPath(DOWNLOAD_ROOT_PATH);
+		manager.setDownloadPath(서버_파일_디렉토리);
 		
 		// when
-		byte[] arrayFromManager = manager.getFileByRecord(new Record(DOWNLOAD_PATH_AND_FILE_NAME));
+		byte[] arrayFromManager = manager.getFileByRecord(new Record(서버에_저장된_음성파일_전체_디렉토리명));
 		
 		// then
 		assertNotNull(arrayFromManager);
@@ -237,18 +287,20 @@ public class UploadRecordMvcTest {
 	@Test
 	public void 녹음_파일을_업로드하면_다운로드_폴더에_저장해야_한다() throws Exception {
 		// given - 1 - 파일 생성
-		MockMultipartFile file = writeTempMockMultipart();
+		MockMultipartFile file = mockMultipart타입으로_Mp3파일_작성();
 		
 		// give - 2 - Manager를 원본 구현체로 삽입
 		FileUploadManager originalManager = new FileUploadManager();
-		originalManager.setDownloadPath(DOWNLOAD_ROOT_PATH);
+		originalManager.setDownloadPath(서버_파일_디렉토리);
 		rc.setFileUploadManager(originalManager);
 		
 		// when
 		mockMvc.perform(multipart(URL).file(file));
 
 		// then
-		Path p = Paths.get(DOWNLOAD_PATH_AND_FILE_NAME);
+		Path p = Paths.get(서버에_저장된_음성파일_전체_디렉토리명);
 		assertTrue(Files.exists(p));
 	}
+	
+	
 }

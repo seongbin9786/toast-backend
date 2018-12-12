@@ -1,8 +1,11 @@
 package io.toast;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import javax.transaction.Transactional;
 
@@ -20,6 +23,8 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 @RequestMapping("/records")
 public class RecordController {
 
+	public static final String AUDIO_PREFIX = "audio/";
+
 	@Autowired
 	private RecordRepository repo;
 	
@@ -32,7 +37,8 @@ public class RecordController {
 	
 	@GetMapping("/{id}")
 	public byte[] download(@PathVariable Long id) throws Exception {
-		Record r = repo.getOne(id);
+		Optional<Record> rOptional = repo.findById(id);
+		Record r = rOptional.orElseThrow(() -> new NoRecordException());
 
 		return manager.getFileByRecord(r);
 	}
@@ -47,9 +53,18 @@ public class RecordController {
 		
 		MultipartFile file = getFileFromRequest(request);
 		
+		assertFileIsAudio(file);
+		
 		Record newRecord = manager.saveWithFile(file);
 		
 		return repo.save(newRecord);
+	}
+
+	private void assertFileIsAudio(MultipartFile file) throws IOException {
+		String filename = file.getName();
+		String contentType = Files.probeContentType(Paths.get(filename));
+		if (!contentType.startsWith(AUDIO_PREFIX))
+			throw new BadFileUploadedException();
 	}
 
 	private MultipartFile getFileFromRequest(MultipartHttpServletRequest request) {
