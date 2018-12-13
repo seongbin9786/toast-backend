@@ -10,7 +10,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @DataJpaTest
-public class UploadRecordJpaTest {
+public class RecordJpaTest {
 
 	@Autowired
 	private RecordRepository repo;
