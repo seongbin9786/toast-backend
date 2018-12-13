@@ -13,9 +13,16 @@ public class FileUploadManager {
 	
 	public static String DOWNLOAD_ROOT_PATH;
 
+	public FileUploadManager() {
+	}
+	
+	public FileUploadManager(String downloadRootPath) {
+		setDownloadPath(downloadRootPath);
+	}
+
 	@Value("${file.download_root_path}") 
-	public void setDownloadPath(String path) {
-		DOWNLOAD_ROOT_PATH = path;
+	public void setDownloadPath(String downloadRootPath) {
+		DOWNLOAD_ROOT_PATH = downloadRootPath;
 	}
 	
 	public Record saveWithFile(MultipartFile file) {
