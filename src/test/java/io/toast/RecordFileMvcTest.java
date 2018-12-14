@@ -16,21 +16,21 @@ import java.nio.file.Paths;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import config.FixturesConfig;
+import io.toast.config.FileConfig;
 import template.FileTestTemplate;
 
-@RunWith(SpringRunner.class)
-@WebMvcTest(RecordController.class)
+@WebMvcTest(controllers = RecordController.class)
 public class RecordFileMvcTest extends FileTestTemplate {
 
+	@Autowired
+	private FileConfig fileConfig;
+	
 	@Autowired
 	private MockMvc mockMvc;
 	
@@ -45,19 +45,26 @@ public class RecordFileMvcTest extends FileTestTemplate {
 
 	private static final String URL = "/records";
 	
-	private static final String 서버_파일_디렉토리 = FixturesConfig.FILES_ROOT_PATH + "download/";
-	private static final String 클라이언트_파일_디렉토리 = FixturesConfig.FILES_ROOT_PATH + "upload/";
-	
 	private static final String[] 가능한_음성파일_확장자_배열 = { ".mp3", ".wav", ".m4a", ".flac", ".au" };
 	private static final String 기본_확장자 = 가능한_음성파일_확장자_배열[0];
 	private static final String 파일명 = "filename";
 
 	private static final String[] 불가능한_음성파일_확장자_배열 = { ".txt" };
 
+	private String 서버_파일_디렉토리() {
+		return fileConfig.getServerFilesRootPath();
+	}
+	
+	private String 클라이언트_파일_디렉토리() {
+		return fileConfig.getClientFilesRootPath();
+	}
+	
 	@Before
 	public void createDirectory() throws IOException {
-		Files.createDirectories(Paths.get(서버_파일_디렉토리));
-		Files.createDirectories(Paths.get(클라이언트_파일_디렉토리));
+		System.out.println(서버_파일_디렉토리());
+		System.out.println(클라이언트_파일_디렉토리());
+		Files.createDirectories(Paths.get(서버_파일_디렉토리()));
+		Files.createDirectories(Paths.get(클라이언트_파일_디렉토리()));
 	}
 	
 	private File 파일생성하기(String 경로, boolean 업로드용) throws Exception {
@@ -74,14 +81,14 @@ public class RecordFileMvcTest extends FileTestTemplate {
 	}
 
 	private void 원본_FileUploadManager를_주입하기() {
-		recordController.setFileUploadManager(new FileUploadManager(서버_파일_디렉토리));
+		recordController.setFileUploadManager(new FileUploadManager(fileConfig));
 	}	
 	
 	@Test
 	public void 이_파일_종류들은_업로드가_가능하다() throws Exception {
 		for (String 가능한_확장자 : 가능한_음성파일_확장자_배열) {
 			// GIVEN 
-			String 파일_경로 = 클라이언트_파일_디렉토리 + 파일명 + 가능한_확장자;
+			String 파일_경로 = 클라이언트_파일_디렉토리() + 파일명 + 가능한_확장자;
 			MockMultipartFile file = 테스트용_파일_생성하기(파일_경로, true);
 			
 			// WHEN
@@ -96,7 +103,7 @@ public class RecordFileMvcTest extends FileTestTemplate {
 	public void 그_외_파일들은_업로드가_불가능하다() throws Exception {
 		for (String 불가능한_확장자 : 불가능한_음성파일_확장자_배열) {
 			// GIVEN 
-			MockMultipartFile file = 테스트용_파일_생성하기(클라이언트_파일_디렉토리 + 파일명 + 불가능한_확장자, true);
+			MockMultipartFile file = 테스트용_파일_생성하기(클라이언트_파일_디렉토리() + 파일명 + 불가능한_확장자, true);
 			
 			// WHEN
 			String errorMsg = mockMvc.perform(multipart(URL).file(file))
@@ -126,11 +133,11 @@ public class RecordFileMvcTest extends FileTestTemplate {
 	@Test
 	public void FileUploadManager_getFileByRecord는_업로드된_파일의_byte_array를_제공해야_한다() throws Exception {
 		// GIVEN - 업로드된 폴더에 파일 생성
-		String 파일_경로 = 서버_파일_디렉토리 + 파일명 + 기본_확장자;
+		String 파일_경로 = 서버_파일_디렉토리() + 파일명 + 기본_확장자;
 		파일생성하기(파일_경로, false);
 		
 		// GIVEN - FileUploadManager 설정
-		FileUploadManager originalManager = new FileUploadManager(서버_파일_디렉토리);
+		FileUploadManager originalManager = new FileUploadManager(fileConfig);
 		
 		// WHEN
 		byte[] arrayFromManager = originalManager.getFileByRecord(new Record(파일_경로));
@@ -145,7 +152,7 @@ public class RecordFileMvcTest extends FileTestTemplate {
 	@Test
 	public void 녹음_파일을_업로드하면_다운로드_폴더에_저장해야_한다() throws Exception {
 		// GIVEN - 파일 생성
-		String 클라이언트_개인의_파일_경로 = 클라이언트_파일_디렉토리 + 파일명 + 기본_확장자;
+		String 클라이언트_개인의_파일_경로 = 클라이언트_파일_디렉토리() + 파일명 + 기본_확장자;
 		MockMultipartFile file = 테스트용_파일_생성하기(클라이언트_개인의_파일_경로, true);
 
 		// GIVEN
@@ -155,7 +162,7 @@ public class RecordFileMvcTest extends FileTestTemplate {
 		mockMvc.perform(multipart(URL).file(file));
 
 		// THEN
-		String 서버_저장소의_파일_경로 = 서버_파일_디렉토리 + 파일명 + 기본_확장자;
+		String 서버_저장소의_파일_경로 = 서버_파일_디렉토리() + 파일명 + 기본_확장자;
 		Path p = Paths.get(서버_저장소의_파일_경로);
 		assertTrue(Files.exists(p));
 

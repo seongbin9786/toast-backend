@@ -4,29 +4,24 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+
+import io.toast.config.FileConfig;
 
 @Component
 public class FileUploadManager {
 	
-	public static String DOWNLOAD_ROOT_PATH;
+	private FileConfig fileConfig;
 
-	public FileUploadManager() {
-	}
-	
-	public FileUploadManager(String downloadRootPath) {
-		setDownloadPath(downloadRootPath);
+	@Autowired
+	public FileUploadManager(FileConfig fileConfig) {
+		this.fileConfig = fileConfig;
 	}
 
-	@Value("${file.download_root_path}") 
-	public void setDownloadPath(String downloadRootPath) {
-		DOWNLOAD_ROOT_PATH = downloadRootPath;
-	}
-	
 	public Record saveWithFile(MultipartFile file) {
-		String path = DOWNLOAD_ROOT_PATH + "/" + file.getName();
+		String path = fileConfig.getServerFilesRootPath() + file.getName();
 		
 		saveToDrive(file, path);
 
@@ -37,6 +32,7 @@ public class FileUploadManager {
 	
 	private void saveToDrive(MultipartFile file, String path) {
 		try {
+			System.out.println("save to drive: " + path);
 			file.transferTo(new File(path));
 		} catch (IllegalStateException e) {
 			e.printStackTrace();
@@ -47,9 +43,13 @@ public class FileUploadManager {
 
 	public byte[] getFileByRecord(Record r) throws IOException {
 		
+		System.out.println("getFilePathFromRecord: " + r.getFilePath());
+		
 		File fileToDownload = new File(r.getFilePath());
 		
 		byte[] fileAsBytes = Files.readAllBytes(fileToDownload.toPath());
+		
+		System.out.println("fileAsByes: " + fileAsBytes.toString());
 		
 		return fileAsBytes;
 	}

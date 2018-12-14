@@ -69,6 +69,13 @@
 			<artifactId>commons-collections4</artifactId>
 			<version>4.2</version>
 		</dependency>
+		
+		<!-- Spring Yaml -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
 	</dependencies>
 
 	<dependencyManagement>

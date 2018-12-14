@@ -1,5 +1,9 @@
 # Created by https://www.gitignore.io/api/java,maven,eclipse,intellij,java-web
 
+## TOAST BACKEND
+tests/
+temp/
+
 ### Eclipse ###
 
 .metadata

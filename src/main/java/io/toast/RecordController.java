@@ -61,8 +61,16 @@ public class RecordController {
 	}
 
 	private void assertFileIsAudio(MultipartFile file) throws IOException {
+		// filename은 key값을 따라감. = shit
 		String filename = file.getName();
+		System.out.println("fileName: " + filename);
+		
+		String originalFilename = file.getOriginalFilename();
+		// original filename은 key에 상관 없음
+		System.out.println("original Filename: " + originalFilename);
+		
 		String contentType = Files.probeContentType(Paths.get(filename));
+		System.out.println("contentType: " + contentType);
 		if (!contentType.startsWith(AUDIO_PREFIX))
 			throw new BadFileUploadedException();
 	}
@@ -73,6 +81,7 @@ public class RecordController {
 		
 		try {
 			key = request.getMultiFileMap().keySet().iterator().next();
+			System.out.println("key: " + key);
 		} catch (NoSuchElementException e) {			
 			throw new NoFileUploadedException();
 		}
