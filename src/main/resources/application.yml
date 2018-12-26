@@ -1,26 +1,5 @@
 spring:
-  profiles: dev
-  
-rootPath: ./temp/
-
----
-
-spring:
-  profiles: prod
-  
-rootPath: /opt/
-
---- 
-spring:
-  profiles: test
-  
-rootPath: ./tests/fixtures/
-
---- 
-
-spring:
-
-  profiles:    active:    - prod
+  profiles: default
 
   datasource:
     url: jdbc:mysql://localhost:3306/toast?createDatabaseIfNotExist=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
@@ -37,3 +16,32 @@ logging:
   level:
     org.springframework.web: INFO
     org.hibernate: DEBUG
+
+# Dev env
+---
+
+spring:
+  profiles: dev, default
+  
+io:
+  toast:
+    rootPath: ./temp/
+
+# Test env
+---
+spring:
+  profiles: test, default
+  
+io:
+  toast:
+    rootPath: ./tests/fixtures/
+
+# Production env
+--- 
+
+spring:
+  profiles: prod, default
+
+io:
+  toast:
+    rootPath: /opt/ 
