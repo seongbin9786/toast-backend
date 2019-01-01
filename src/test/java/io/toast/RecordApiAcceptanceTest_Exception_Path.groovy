@@ -27,6 +27,9 @@ class RecordApiAcceptanceTest_Exception_Path extends FileTestTemplate {
         cleanUpFiles()
     }
 
+    @Override
+    def 필요하면_FileConfig_를_덮어쓰기() {}
+
     def "POST /records 에 녹음 파일이 아닌 파일을 업로드하면 실패한다"() {
         given: "업로드할 파일을 준비한다"
         def 파일명 = "filename"
