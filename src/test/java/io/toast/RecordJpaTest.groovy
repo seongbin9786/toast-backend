@@ -10,7 +10,7 @@ import static org.junit.Assert.assertNotEquals
 class RecordJpaTest extends Specification {
 
     @Autowired
-    private RecordRepository repo
+    RecordRepository repo
 
     def "Record를 매번 저장할 때 마다 ID가 새로 생성되어야 한다"() {
         given:
