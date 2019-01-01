@@ -1,5 +1,6 @@
 package io.toast
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import constants.RecordExtensions
 import io.toast.config.FileConfig
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile
 import spock.mock.DetachedMockFactory
 import template.FileTestTemplate
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
@@ -31,6 +33,8 @@ class RecordFileMvcTest extends FileTestTemplate {
 
     @Autowired
     FileUploadManager fileUploadManager
+
+    def objectMapper = new ObjectMapper()
 
     static final URL = "/records"
 
@@ -115,4 +119,22 @@ class RecordFileMvcTest extends FileTestTemplate {
         1 * fileUploadManager.saveWithFile(_ as MultipartFile)
     }
 
+    def "녹음 파일 다운로드 시 파일 이름 헤더가 필요하다"() {
+        given: "업로드된 녹음 파일의 ID를 준비한다"
+        def 녹음_파일_ID = 1L
+        recordRepository.findById(1L) >> Optional.of(new Record(1L))
+        fileUploadManager.getFileByRecord(new Record(1L)) >> { new byte[100] }
+
+        when: "GET /records/{id} 로 녹음 파일을 다운로드한다"
+        def request = mockMvc
+                .perform(get(URL + "/" + 녹음_파일_ID))
+
+        then: "녹음 파일이 파일명과 함께 제공된다"
+        request.andExpect(status().isOk())
+        with(request.andReturn().response) {
+            assert contentAsByteArray != null
+            assert getHeader("Content-Disposition") != null
+            assert getHeader("Content-Disposition").contains("filename")
+        }
+    }
 }

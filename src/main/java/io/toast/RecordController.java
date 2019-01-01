@@ -10,6 +10,10 @@ import java.util.Optional;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +27,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 @RequestMapping("/records")
 public class RecordController {
 
-	public static final String AUDIO_PREFIX = "audio/";
+	private static final String AUDIO_PREFIX = "audio/";
 
 	@Autowired
 	private RecordRepository repo;
@@ -36,11 +40,16 @@ public class RecordController {
 	}
 	
 	@GetMapping("/{id}")
-	public byte[] download(@PathVariable Long id) throws Exception {
+	public ResponseEntity<byte[]> download(@PathVariable Long id) throws Exception {
 		Optional<Record> rOptional = repo.findById(id);
-		Record r = rOptional.orElseThrow(() -> new NoRecordException());
+		Record r = rOptional.orElseThrow(NoRecordException::new);
 
-		return manager.getFileByRecord(r);
+		byte[] content = manager.getFileByRecord(r);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Content-Disposition", "attachment;filename=" + r.getOriginalFileName());
+
+		return new ResponseEntity<>(content, headers, HttpStatus.OK);
 	}
 	
 	@GetMapping
