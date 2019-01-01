@@ -11,6 +11,9 @@ import java.nio.file.Paths
 @SpringBootTest(classes = ToastBackendApplication)
 class FileTests extends FileTestTemplate {
 
+    @Override
+    def 필요하면_FileConfig_를_덮어쓰기() {}
+
     def "파일을 작성할 수 있다"() {
 
         given:

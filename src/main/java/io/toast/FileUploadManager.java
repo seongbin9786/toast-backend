@@ -3,6 +3,9 @@ package io.toast;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -21,19 +24,31 @@ public class FileUploadManager {
 	}
 
 	public Record saveWithFile(MultipartFile file) {
-		String path = fileConfig.getServerFilesRootPath() + file.getName();
+		String path = createPath(fileConfig.getServerFilesRootPath());
 		
 		saveToDrive(file, path);
 
-		Record newRecord = new Record(path);
-
-		return newRecord;
+		return new Record(path, file.getName());
 	}
-	
+
+	private String createPath(String serverFilesRootPath) {
+		return serverFilesRootPath + getFolderNameForToday() + UUID.randomUUID();
+	}
+
+	private String getFolderNameForToday() {
+		LocalDate today = LocalDate.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd/");
+		String path = today.format(formatter);
+
+		return path;
+	}
+
 	private void saveToDrive(MultipartFile file, String path) {
 		try {
 			System.out.println("save to drive: " + path);
-			file.transferTo(new File(path));
+			File savedPath = new File(path);
+			savedPath.getParentFile().mkdirs();
+			file.transferTo(savedPath);
 		} catch (IllegalStateException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -49,7 +64,7 @@ public class FileUploadManager {
 		
 		byte[] fileAsBytes = Files.readAllBytes(fileToDownload.toPath());
 		
-		System.out.println("fileAsByes: " + fileAsBytes.toString());
+		System.out.println("fileAsByes: " + fileAsBytes);
 		
 		return fileAsBytes;
 	}

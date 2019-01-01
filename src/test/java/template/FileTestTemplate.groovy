@@ -1,12 +1,12 @@
 package template
 
 import io.toast.config.FileConfig
-import org.junit.Ignore
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
+import spock.lang.Ignore
 import spock.lang.Specification
 
 import java.nio.file.Files
@@ -16,7 +16,7 @@ import java.nio.file.Paths
 @ActiveProfiles("test")
 @EnableConfigurationProperties(FileConfig.class)
 @Ignore
-class FileTestTemplate extends Specification {
+abstract class FileTestTemplate extends Specification {
 
 	@Autowired
 	FileConfig fileConfig
@@ -29,7 +29,10 @@ class FileTestTemplate extends Specification {
 		return fileConfig.getClientFilesRootPath()
 	}
 
+	abstract def 필요하면_FileConfig_를_덮어쓰기()
+
 	def setup() {
+		필요하면_FileConfig_를_덮어쓰기()
 		디렉토리_생성하기()
 	}
 

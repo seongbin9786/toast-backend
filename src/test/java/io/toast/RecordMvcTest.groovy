@@ -28,7 +28,7 @@ class RecordMvcTest extends Specification {
     RecordRepository recordRepository
 
     @Autowired
-    FileUploadManager manager
+    FileUploadManager fileUploadManager
 
     static final URL = "/records"
 
@@ -48,20 +48,11 @@ class RecordMvcTest extends Specification {
         }
     }
 
-    def setup() {
-        setMockedManager()
-    }
-
-    // mock된 manager로 다시 변경
-    def setMockedManager() {
-        rc.setFileUploadManager(manager)
-    }
-
     def "녹음 파일을 업로드할 주소는 POST /records 여야 한다"() {
         when:
-        def response = mockMvc.perform(multipart(URL)).andReturn().getResponse()
-        def statusCode = response.getStatus()
-        def errorMsg = response.getErrorMessage()
+        def response = mockMvc.perform(multipart(URL)).andReturn().response
+        def statusCode = response.status
+        def errorMsg = response.errorMessage
 
         then:
         // 405[Method Not Allowed - 엔드포인트에서 해당 Method를 지원하지 않는 경우] 및
@@ -82,7 +73,7 @@ class RecordMvcTest extends Specification {
                 .andExpect(status().isOk())
 
         then:
-        1 * manager.getFileByRecord(_ as Record)
+        1 * fileUploadManager.getFileByRecord(_ as Record)
     }
 
     def "예외테스트 없는 ID로 조회시 NOT FOUND를 반환해야 한다"() {

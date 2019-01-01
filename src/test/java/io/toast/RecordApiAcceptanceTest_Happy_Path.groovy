@@ -26,6 +26,9 @@ class RecordApiAcceptanceTest_Happy_Path extends FileTestTemplate {
     MockMvc mockMvc
 
     @Shared
+    ObjectMapper objectMapper = new ObjectMapper()
+
+    @Shared
     Record record
 
     @Shared
@@ -33,9 +36,8 @@ class RecordApiAcceptanceTest_Happy_Path extends FileTestTemplate {
 
     static final URL = "/records"
 
-    def cleanupSpec() {
-        cleanUpFiles()
-    }
+    @Override
+    def 필요하면_FileConfig_를_덮어쓰기() {}
 
     def "POST /records 로 녹음 파일을 업로드할 수 있다"() {
         given: "업로드할 파일을 준비한다"
@@ -96,6 +98,9 @@ class RecordApiAcceptanceTest_Happy_Path extends FileTestTemplate {
         then: "다시 녹음 파일을 요청하는 경우, 제거됨을 확인할 수 있다"
         request.andExpect(status().isOk())
         mockMvc.perform(get(URL + "/" + 녹음_파일_ID)).andExpect(status().isNotFound())
+
+        cleanup:
+        cleanUpFiles()
     }
 
     def Body_를_Record_인스턴스로_변환(ResultActions result) {

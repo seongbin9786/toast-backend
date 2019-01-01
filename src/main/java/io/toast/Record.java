@@ -8,8 +8,10 @@ import javax.persistence.Id;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 @Entity
+@Getter
 @EqualsAndHashCode(of = "id")
 public class Record {
 
@@ -19,6 +21,8 @@ public class Record {
 
 	@JsonIgnore
 	private String filePath;
+
+	private String originalFileName;
 	
 	public Record() {
 	}
@@ -27,16 +31,8 @@ public class Record {
 		this.id = id;
 	}
 
-	public Record(String filePath) {
+	public Record(String filePath, String originalFileName) {
 		this.filePath = filePath;
+		this.originalFileName = originalFileName;
 	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public String getFilePath() {
-		return filePath;
-	}
-
 }
