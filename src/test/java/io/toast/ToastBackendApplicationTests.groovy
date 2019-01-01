@@ -10,7 +10,7 @@ import javax.sql.DataSource
 class ToastBackendApplicationTests extends Specification {
 
     @Autowired
-    private DataSource dataSource
+    DataSource dataSource
 
     def "JPA를 Depdendency로 놓는 경우 dataSource가 있어야 한다"() {
         assert dataSource != null

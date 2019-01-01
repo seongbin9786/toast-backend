@@ -19,16 +19,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RecordMvcTest extends Specification {
 
     @Autowired
-    private MockMvc mockMvc
+    MockMvc mockMvc
 
     @Autowired
-    private RecordController rc
+    RecordController rc
 
     @Autowired
-    private RecordRepository recordRepository
+    RecordRepository recordRepository
 
     @Autowired
-    private FileUploadManager manager
+    FileUploadManager manager
+
+    static final URL = "/records"
 
     @TestConfiguration
     static class MockConfig {
@@ -45,8 +47,6 @@ class RecordMvcTest extends Specification {
             return factory.Mock(FileUploadManager)
         }
     }
-
-    private static final String URL = "/records"
 
     def setup() {
         setMockedManager()
