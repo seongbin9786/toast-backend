@@ -14,11 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
@@ -67,6 +63,14 @@ public class RecordController {
 		Record newRecord = manager.saveWithFile(file);
 		
 		return repo.save(newRecord);
+	}
+
+	@DeleteMapping("/{id}")
+	public void delete(@PathVariable Long id) {
+		Optional<Record> toDelete = repo.findById(id);
+		Record r = toDelete.orElseThrow(NoRecordException::new);
+
+		repo.deleteById(id);
 	}
 
 	private void assertFileIsAudio(MultipartFile file) throws IOException {
