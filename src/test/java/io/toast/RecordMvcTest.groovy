@@ -10,6 +10,7 @@ import org.springframework.test.web.servlet.MockMvc
 import spock.lang.Specification
 import spock.mock.DetachedMockFactory
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -104,4 +105,29 @@ class RecordMvcTest extends Specification {
         response.andExpect(status().isOk())
     }
 
+    def "DELETE /records/{id} 로 존재하는 녹음 파일이 제거되며 200 OK를 반환한다"() {
+        def recordId = 1L
+        given:
+        recordRepository.findById(recordId) >> Optional.of(new Record(recordId))
+
+        when:
+        def response = mockMvc
+                .perform(delete(URL + "/" + recordId))
+
+        then:
+        response.andExpect(status().isOk())
+    }
+
+    def "DELETE /records/{id} 에 없는 ID로 요청하는 경우 404를 반환한다"() {
+        def recordId = 1L
+        given:
+        recordRepository.findById(recordId) >> Optional.empty()
+
+        when:
+        def response = mockMvc
+                .perform(delete(URL + "/" + recordId))
+
+        then:
+        response.andExpect(status().isNotFound())
+    }
 }
