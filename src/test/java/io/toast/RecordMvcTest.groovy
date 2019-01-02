@@ -53,7 +53,6 @@ class RecordMvcTest extends Specification {
         when:
         def response = mockMvc.perform(multipart(URL)).andReturn().response
         def statusCode = response.status
-        def errorMsg = response.errorMessage
 
         then:
         // 405[Method Not Allowed - 엔드포인트에서 해당 Method를 지원하지 않는 경우] 및
@@ -61,7 +60,6 @@ class RecordMvcTest extends Specification {
         assert HttpStatus.METHOD_NOT_ALLOWED.value() != statusCode
         assert HttpStatus.NOT_FOUND.value() != statusCode
         assert HttpStatus.BAD_REQUEST.value() == statusCode
-        assert NoFileUploadedException.MESSAGE == errorMsg
     }
 
     def "개별 조회시 FileUploadManager getFileByRecord를 호출한다"() {

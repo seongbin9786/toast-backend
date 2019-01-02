@@ -55,8 +55,9 @@ abstract class FileTestTemplate extends Specification {
 	static def 테스트용_파일_생성하기(String 경로) throws Exception {
 		File toConvert = 파일생성하기(경로)
 		FileInputStream fis = new FileInputStream(toConvert)
+		String contentType = Files.probeContentType(Paths.get(경로))
 
-		new MockMultipartFile(toConvert.getName(), fis)
+		new MockMultipartFile("file", toConvert.getName(), contentType, fis)
 	}
 
 	static def getContentType(String ext) throws IOException {
