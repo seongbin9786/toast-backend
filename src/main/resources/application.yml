@@ -1,5 +1,6 @@
 spring:
-  profiles: default
+  profiles:
+    active: dev
 
   datasource:
     url: jdbc:mysql://localhost:3306/toast?createDatabaseIfNotExist=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
@@ -17,20 +18,10 @@ logging:
     org.springframework.web: INFO
     org.hibernate: DEBUG
 
-# Dev env
----
-
-spring:
-  profiles: dev, default
-  
-io:
-  toast:
-    rootPath: ./temp/
-
 # Test env
 ---
 spring:
-  profiles: test, default
+  profiles: test
   
 io:
   toast:
@@ -40,8 +31,18 @@ io:
 --- 
 
 spring:
-  profiles: prod, default
+  profiles: prod
 
 io:
   toast:
     rootPath: /opt/ 
+
+# Dev env
+---
+
+spring:
+  profiles: dev
+
+io:
+  toast:
+    rootPath: ./temp/
