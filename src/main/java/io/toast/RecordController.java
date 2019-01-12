@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -45,8 +46,12 @@ public class RecordController {
 		Optional<Record> rOptional = repo.findById(id);
 		Record r = rOptional.orElseThrow(NoRecordException::new);
 
-		byte[] content = manager.getFileByRecord(r);
-
+		byte[] content;
+		try {
+			content = manager.getFileByRecord(r);
+		} catch (NoSuchFileException e) {
+			throw new CannotFindRecordFileException();
+		}
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Content-Disposition", "attachment;filename=" + r.getOriginalFileName());
 
