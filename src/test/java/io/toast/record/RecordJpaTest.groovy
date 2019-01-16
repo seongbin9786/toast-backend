@@ -1,7 +1,7 @@
 package io.toast.record
 
-import io.toast.records.domain.Record
-import io.toast.records.domain.RecordRepository
+import io.toast.record.domain.Record
+import io.toast.record.domain.RecordRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import spock.lang.Specification

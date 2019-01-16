@@ -1,8 +1,8 @@
 package io.toast.record
 
 import io.toast.config.FileConfig
-import io.toast.records.application.FileUploadManager
-import io.toast.records.domain.Record
+import io.toast.record.application.FileUploadManager
+import io.toast.record.domain.Record
 import org.springframework.web.multipart.MultipartFile
 import spock.lang.Shared
 import template.FileTestTemplate

@@ -1,8 +1,6 @@
 package io.toast.social
 
 import com.google.common.collect.Lists
-import io.toast.LocalFacebookApiServer
-import io.toast.LocalKakaoApiServer
 import io.toast.social.infra.BadSocialAccessInfoException
 import io.toast.social.infra.RealFacebookApiServer
 import io.toast.social.infra.RealKakaoApiServer

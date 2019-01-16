@@ -2,7 +2,7 @@ package io.toast.record
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import constants.RecordExtensions
-import io.toast.records.domain.Record
+import io.toast.record.domain.Record
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc

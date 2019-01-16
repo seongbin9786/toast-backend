@@ -1,7 +1,7 @@
 package learning
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.toast.records.domain.Record
+import io.toast.record.domain.Record
 import spock.lang.Specification
 
 class ObjectMapperTests extends Specification {

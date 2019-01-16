@@ -1,10 +1,10 @@
 package io.toast.record
 
-import io.toast.records.application.FileUploadManager
-import io.toast.records.ui.NoRecordException
-import io.toast.records.domain.Record
-import io.toast.records.ui.RecordController
-import io.toast.records.domain.RecordRepository
+import io.toast.record.application.FileUploadManager
+import io.toast.record.ui.NoRecordException
+import io.toast.record.domain.Record
+import io.toast.record.ui.RecordController
+import io.toast.record.domain.RecordRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.context.TestConfiguration

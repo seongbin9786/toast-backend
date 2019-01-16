@@ -1,7 +1,5 @@
 package io.toast.social
 
-import io.toast.LocalFacebookApiServer
-import io.toast.LocalKakaoApiServer
 import io.toast.social.application.SocialApiServers
 import io.toast.social.domain.SocialType
 import io.toast.social.application.SocialUserService

@@ -1,6 +1,5 @@
 package io.toast.social
 
-import io.toast.LocalKakaoApiServer
 import io.toast.ToastBackendApplication
 import io.toast.social.infra.RealKakaoApiServer
 import io.toast.social.domain.SocialType
