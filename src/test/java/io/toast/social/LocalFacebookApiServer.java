@@ -1,29 +1,32 @@
 package io.toast.social;
 
+import com.jayway.jsonpath.DocumentContext;
 import io.toast.social.domain.SocialApiServer;
 import io.toast.social.domain.SocialType;
 import io.toast.social.domain.SocialUserInfo;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import utils.SocialConfigReader;
 
 /* Test 용 Facebook Api Server */
 @Component
 @Profile("test-local")
 class LocalFacebookApiServer implements SocialApiServer {
 
-    @Value("${social.facebook.id}")
-    private Long id;
+    private static String FACEBOOK_SOCIAL_USER_NAME;
+    private static String FACEBOOK_SOCIAL_PROFILE_PIC_URL;
+    private static Long FACEBOOK_SOCIAL_USER_ID;
 
-    @Value("${social.facebook.name}")
-    private String name;
-
-    @Value("${social.facebook.profile_pic_url}")
-    private String profilePicUrl;
+    public LocalFacebookApiServer() {
+        DocumentContext json = SocialConfigReader.getSocialConfigAsJson();
+        FACEBOOK_SOCIAL_PROFILE_PIC_URL = json.read("$.social.facebook.profile_pic_url");
+        FACEBOOK_SOCIAL_USER_NAME = json.read("$.social.facebook.name");
+        FACEBOOK_SOCIAL_USER_ID = json.read("$.social.facebook.id");
+    }
 
     @Override
     public SocialUserInfo getUserInfo(String accessToken) {
-        return new SocialUserInfo(id, name, profilePicUrl);
+        return new SocialUserInfo(FACEBOOK_SOCIAL_USER_ID, FACEBOOK_SOCIAL_USER_NAME, FACEBOOK_SOCIAL_PROFILE_PIC_URL);
     }
 
     @Override

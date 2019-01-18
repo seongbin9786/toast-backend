@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.ResultActions
 import org.yaml.snakeyaml.Yaml
 import spock.lang.Specification
 import spock.lang.Stepwise
+import utils.SocialConfigReader
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -35,26 +36,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SocialUserAcceptanceTest extends Specification {
 
     private static String FACEBOOK_ACCESS_TOKEN
+    private static String FACEBOOK_SOCIAL_USER_NAME
+    private static Long FACEBOOK_SOCIAL_USER_ID
 
     private static String KAKAO_ACCESS_TOKEN
+    private static String KAKAO_SOCIAL_USER_NAME
+    private static Long KAKAO_SOCIAL_USER_ID
 
     // @Value를 @Shared로 하면 값이 인식이 안 되고,
     // static으로 하면 주입이 안 된다.
     // @Autowired도, @Value도 setup()에서 static에 할당하려고 하면 안 된다.
     // 그래서, yaml을 직접 읽기로 함
     def setupSpec() {
-        Yaml yaml = new Yaml()
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("application.yml")
-        Map<String, Object> defaultProps = (Map<String, Object>) yaml.loadAll(inputStream).iterator().next() // Spring default 문서 영역
-        System.out.println(defaultProps)
-        DocumentContext json = JsonPath.parse(defaultProps)
+        def json = SocialConfigReader.getSocialConfigAsJson()
         FACEBOOK_ACCESS_TOKEN = json.read('$.social.facebook.access_token')
-        KAKAO_ACCESS_TOKEN = json.read('$.social.kakao.access_token')
+        FACEBOOK_SOCIAL_USER_NAME = json.read('$.social.facebook.name')
+        FACEBOOK_SOCIAL_USER_ID = json.read('$.social.facebook.id')
 
-        System.out.println(FACEBOOK_ACCESS_TOKEN)
-        System.out.println(KAKAO_ACCESS_TOKEN)
-        assert FACEBOOK_ACCESS_TOKEN != null
-        assert KAKAO_ACCESS_TOKEN != null
+        KAKAO_ACCESS_TOKEN = json.read('$.social.kakao.access_token')
+        KAKAO_SOCIAL_USER_NAME = json.read('$.social.kakao.name')
+        KAKAO_SOCIAL_USER_ID = json.read('$.social.kakao.id')
     }
 
     @Autowired
@@ -84,12 +85,12 @@ class SocialUserAcceptanceTest extends Specification {
         )
 
         then: "회원가입 및 로그인에 성공한다"
-        소셜로그인_정상_응답인지_검증(result)
+        소셜로그인_정상_응답인지_검증(result, 소셜이름, 소셜ID)
 
         where:
-        소셜타입             | 엑세스토큰
-        SocialType.FB    | FACEBOOK_ACCESS_TOKEN
-        SocialType.KAKAO | KAKAO_ACCESS_TOKEN
+        소셜타입          | 엑세스토큰 | 소셜이름 | 소셜ID
+        SocialType.FB    | FACEBOOK_ACCESS_TOKEN | FACEBOOK_SOCIAL_USER_NAME | FACEBOOK_SOCIAL_USER_ID
+        SocialType.KAKAO | KAKAO_ACCESS_TOKEN | KAKAO_SOCIAL_USER_NAME | KAKAO_SOCIAL_USER_ID
     }
 
     def "이미 가입한 유저가 소셜 로그인을 요청하면 성공한다"() {
@@ -105,12 +106,12 @@ class SocialUserAcceptanceTest extends Specification {
         )
 
         then: "로그인에 성공한다"
-        소셜로그인_정상_응답인지_검증(result)
+        소셜로그인_정상_응답인지_검증(result, 소셜이름, 소셜ID)
 
         where:
-        소셜타입 | 엑세스토큰
-        SocialType.FB    | FACEBOOK_ACCESS_TOKEN
-        SocialType.KAKAO | KAKAO_ACCESS_TOKEN
+        소셜타입          | 엑세스토큰 | 소셜이름 | 소셜ID
+        SocialType.FB    | FACEBOOK_ACCESS_TOKEN | FACEBOOK_SOCIAL_USER_NAME | FACEBOOK_SOCIAL_USER_NAME
+        SocialType.KAKAO | KAKAO_ACCESS_TOKEN | KAKAO_SOCIAL_USER_NAME | KAKAO_SOCIAL_USER_ID
     }
 
     def "유효하지 않은 엑세스 토큰이나 소셜 타입으로 소셜 로그인을 요청하면 실패한다"() {
@@ -144,11 +145,7 @@ class SocialUserAcceptanceTest extends Specification {
         def 소셜_로그인_요청_DTO = 소셜로그인_요청_DTO_생성하기(소셜타입, 엑세스토큰)
 
         // socialApiHttpConnector 가 실패한 응답을 주도록 Mocking 하기
-        SocialApiHttpConnector socialApiHttpConnector = Mock(SocialApiHttpConnector)
-        realFacebookApiServer.socialApiHttpConnector = socialApiHttpConnector
-        realKakaoApiServer.socialApiHttpConnector = socialApiHttpConnector
-        socialApiHttpConnector.getResultJson(_ as String) >> { throw new SocialApiServerNotRespondingException() }
-        socialApiHttpConnector.getResultJson(_ as String, _ as String) >> { throw new SocialApiServerNotRespondingException() }
+        socialApiHttpConnector_가_실패한_응답을_주도록_mock_하기()
 
         when: "POST /login 으로 json 전송하여 소셜 로그인을 요청한다"
         def requestJson = objectMapper.writeValueAsString(소셜_로그인_요청_DTO)
@@ -168,6 +165,16 @@ class SocialUserAcceptanceTest extends Specification {
         SocialType.KAKAO | KAKAO_ACCESS_TOKEN
     }
 
+    private void socialApiHttpConnector_가_실패한_응답을_주도록_mock_하기() {
+        SocialApiHttpConnector socialApiHttpConnector = Mock(SocialApiHttpConnector)
+        realFacebookApiServer.socialApiHttpConnector = socialApiHttpConnector
+        realKakaoApiServer.socialApiHttpConnector = socialApiHttpConnector
+        socialApiHttpConnector.getResultJson(_ as String) >> { throw new SocialApiServerNotRespondingException() }
+        socialApiHttpConnector.getResultJson(_ as String, _ as String) >> {
+            throw new SocialApiServerNotRespondingException()
+        }
+    }
+
     private static SocialLoginRequestDto 소셜로그인_요청_DTO_생성하기(def 소셜타입, def 엑세스토큰) {
         def dto = new SocialLoginRequestDto()
         dto.accessToken = 엑세스토큰
@@ -181,8 +188,12 @@ class SocialUserAcceptanceTest extends Specification {
         2. 소셜 로그인이므로, 미리 소셜 회원의 신상을 단언 조건으로 넣고, 반환되는 값이 일치하는 지 보는 게 좋을 것 같다.
         3. name, id가 기대했던 값이어야 한다는 것
         4. profilePicUrl은 empty나 null만 아니기로
+
+        검증만 더 빡세게 하면 소셜 로그인은 끝남.
+
+        로그인 토큰이 여러 개이면 좋겠는데, 불가능한가?
      */
-    private void 소셜로그인_정상_응답인지_검증(ResultActions result) {
+    private void 소셜로그인_정상_응답인지_검증(ResultActions result, String 소셜이름, Long 소셜_ID) {
         result.andExpect(status().isOk())
 
         def 응답_JSON = result.andReturn().response.contentAsString
@@ -194,9 +205,9 @@ class SocialUserAcceptanceTest extends Specification {
         with(로그인_응답_DTO) {
             assert user != null
             with(user) {
-                assert name != null
-                assert id != null
-                assert loginType != null
+                assert name == 소셜이름 // 소셜 이름여야함
+                assert id == 소셜_ID // 소셜 아이디여야함
+                assert loginType.socialAccount // 소셜 계정여야함
             }
             assert auth != null
             with(auth) {

@@ -1,0 +1,18 @@
+# 소셜 로그인 테스트 시 필요한 정보들이다.
+social:
+  # 페이스북 소셜 로그인 토큰 및 사용자 정보를 기입한다
+  facebook:
+    access_token: # 유효한 엑세스 토큰
+    name: # 사용자 이름
+    id: # 사용자의 ID (Long)
+    profile_pic_url: # 프로필 사진 URL (큰 사진 X)
+    expires-in: # expire 시간 in milliseconds (optional)
+    expires-in-hr: # expire 시간 in Human Readable (optional)
+  # 카카오
+  kakao:
+    access_token: # 유효한 엑세스 토큰
+    name: # 사용자 이름
+    id: # 사용자의 ID (Long)
+    profile_pic_url: # 프로필 사진 URL (큰 사진 X)
+    expires-in: # expire 시간 in milliseconds (optional)
+    expires-in-hr: # expire 시간 in Human Readable (optional)

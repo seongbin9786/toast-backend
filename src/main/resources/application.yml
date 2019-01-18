@@ -18,22 +18,6 @@ logging:
     org.springframework.web: INFO
     org.hibernate: DEBUG
 
-social:
-  facebook:
-    access_token: EAAFH4PSZBYzgBAB6bXiuPUlIegPTn2GZAGuNX37mFKj8af3eKhZCsfW7fjuNbl6ukZB8UkpyIQyVsJX8ksSxRLBgBXrE16rvRAUd9oxc3lEsVHZBqA82iw61Bn7uRYXvNFwgAlYwBvxIzVgenZCGvhxODpwj1PP0Gp3J49Ue5QAQZDZD
-    name: 김성빈
-    id: 718245498365327
-    profile_pic_url: https://platform-lookaside.fbsbx.com/platform/profilepic/?asid=718245498365327&height=50&width=50&ext=1550115412&hash=AeTM30lJAa7FrKgv
-    expires-in: 1552706511
-    expires-in-hr: 2019-03-16 03:21:51
-  kakao:
-    access_token: oOP9BoVgz4N-efV2fGBaXwdhoYhYDLe3US1UUQo8BVUAAAFoVFOC4Q
-    name: 김성빈
-    id: 1007871701
-    profile_pic_url: http://k.kakaocdn.net/dn/bQdprz/btqrUdrGosy/4IKPWEZHTkIMWQPxcuui4K/profile_110x110c.jpg
-    expires-in: 0
-    expires-in-hr: 0
-
 # Dev env
 ---
 

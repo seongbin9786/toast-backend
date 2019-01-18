@@ -3,6 +3,7 @@
 ## TOAST BACKEND
 tests/
 temp/
+src/test/resources/social_config.yml
 
 ### Eclipse ###
 
