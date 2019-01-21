@@ -11,7 +11,7 @@ import utils.SocialConfigReader;
 /* Test 용 Facebook Api Server */
 @Component
 @Profile("test-local")
-class LocalFacebookApiServer implements SocialApiServer {
+public class LocalFacebookApiServer implements SocialApiServer {
 
     private static String FACEBOOK_SOCIAL_USER_NAME;
     private static String FACEBOOK_SOCIAL_PROFILE_PIC_URL;
@@ -21,7 +21,7 @@ class LocalFacebookApiServer implements SocialApiServer {
         DocumentContext json = SocialConfigReader.getSocialConfigAsJson();
         FACEBOOK_SOCIAL_PROFILE_PIC_URL = json.read("$.social.facebook.profile_pic_url");
         FACEBOOK_SOCIAL_USER_NAME = json.read("$.social.facebook.name");
-        FACEBOOK_SOCIAL_USER_ID = json.read("$.social.facebook.id");
+        FACEBOOK_SOCIAL_USER_ID = json.read("$.social.facebook.id", Long.class);
     }
 
     @Override

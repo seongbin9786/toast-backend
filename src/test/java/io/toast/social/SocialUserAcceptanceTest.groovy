@@ -11,6 +11,7 @@ import io.toast.social.infra.SocialApiServerNotRespondingException
 import io.toast.social.ui.SocialLoginRequestDto
 import io.toast.social.domain.SocialType
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -30,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureDataJpa
 @AutoConfigureMockMvc
+@AutoConfigureTestDatabase
 @TestPropertySource("classpath:/application.yml")
 @ActiveProfiles("test")
 @Stepwise // 순서대로
@@ -85,12 +87,12 @@ class SocialUserAcceptanceTest extends Specification {
         )
 
         then: "회원가입 및 로그인에 성공한다"
-        소셜로그인_정상_응답인지_검증(result, 소셜이름, 소셜ID)
+        소셜로그인_정상_응답인지_검증(result, 소셜이름, 소셜ID, 유저ID)
 
         where:
-        소셜타입          | 엑세스토큰 | 소셜이름 | 소셜ID
-        SocialType.FB    | FACEBOOK_ACCESS_TOKEN | FACEBOOK_SOCIAL_USER_NAME | FACEBOOK_SOCIAL_USER_ID
-        SocialType.KAKAO | KAKAO_ACCESS_TOKEN | KAKAO_SOCIAL_USER_NAME | KAKAO_SOCIAL_USER_ID
+        소셜타입          | 엑세스토큰 | 소셜이름 | 소셜ID | 유저ID
+        SocialType.FB    | FACEBOOK_ACCESS_TOKEN | FACEBOOK_SOCIAL_USER_NAME | FACEBOOK_SOCIAL_USER_ID | 1
+        SocialType.KAKAO | KAKAO_ACCESS_TOKEN | KAKAO_SOCIAL_USER_NAME | KAKAO_SOCIAL_USER_ID | 2
     }
 
     def "이미 가입한 유저가 소셜 로그인을 요청하면 성공한다"() {
@@ -106,12 +108,12 @@ class SocialUserAcceptanceTest extends Specification {
         )
 
         then: "로그인에 성공한다"
-        소셜로그인_정상_응답인지_검증(result, 소셜이름, 소셜ID)
+        소셜로그인_정상_응답인지_검증(result, 소셜이름, 소셜ID, 유저ID)
 
         where:
-        소셜타입          | 엑세스토큰 | 소셜이름 | 소셜ID
-        SocialType.FB    | FACEBOOK_ACCESS_TOKEN | FACEBOOK_SOCIAL_USER_NAME | FACEBOOK_SOCIAL_USER_NAME
-        SocialType.KAKAO | KAKAO_ACCESS_TOKEN | KAKAO_SOCIAL_USER_NAME | KAKAO_SOCIAL_USER_ID
+        소셜타입          | 엑세스토큰 | 소셜이름 | 소셜ID | 유저ID
+        SocialType.FB    | FACEBOOK_ACCESS_TOKEN | FACEBOOK_SOCIAL_USER_NAME | FACEBOOK_SOCIAL_USER_ID | 1
+        SocialType.KAKAO | KAKAO_ACCESS_TOKEN | KAKAO_SOCIAL_USER_NAME | KAKAO_SOCIAL_USER_ID | 2
     }
 
     def "유효하지 않은 엑세스 토큰이나 소셜 타입으로 소셜 로그인을 요청하면 실패한다"() {
@@ -193,7 +195,7 @@ class SocialUserAcceptanceTest extends Specification {
 
         로그인 토큰이 여러 개이면 좋겠는데, 불가능한가?
      */
-    private void 소셜로그인_정상_응답인지_검증(ResultActions result, String 소셜이름, Long 소셜_ID) {
+    private void 소셜로그인_정상_응답인지_검증(ResultActions result, String 소셜이름, Long 소셜_ID, Long 유저_ID) {
         result.andExpect(status().isOk())
 
         def 응답_JSON = result.andReturn().response.contentAsString
@@ -206,10 +208,12 @@ class SocialUserAcceptanceTest extends Specification {
             assert user != null
             with(user) {
                 assert name == 소셜이름 // 소셜 이름여야함
-                assert id == 소셜_ID // 소셜 아이디여야함
+                assert id == 유저_ID // ID도 사람마다 생성되어야 함
+                assert socialLoginId == 소셜_ID // 소셜 아이디여야함
                 assert loginType.socialAccount // 소셜 계정여야함
             }
             assert auth != null
+            // 장기적으로는 access, refresh 토큰을 empty string 이 아닌걸 반환해야 함
             with(auth) {
                 assert accessToken != null
                 assert refreshToken != null
